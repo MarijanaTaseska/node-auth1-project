@@ -1,3 +1,5 @@
+const User = require('../users/users-model')
+
 /*
   If the user does not have a session saved in the server
 
@@ -7,8 +9,8 @@
   }
 */
 function restricted(req, res, next) {
-console.log('restrictel middleware')
-next()
+  console.log('restrictel middleware')
+  next()
 }
 
 /*
@@ -19,8 +21,15 @@ next()
     "message": "Username taken"
   }
 */
-function checkUsernameFree(req, res, next) {
-  next()
+async function checkUsernameFree(req, res, next) {
+  try {
+    const users = await User.findBy({ username: req.body.username })
+    if (!users.length) {
+      next()
+    } else { res.status(422).json({ message: 'Username taken' }) }
+  } catch (err) {
+    next(err)
+  }
 }
 
 /*
@@ -31,9 +40,17 @@ function checkUsernameFree(req, res, next) {
     "message": "Invalid credentials"
   }
 */
-function checkUsernameExists(req, res, next) {
-  next()
-}
+async function checkUsernameExists(req, res, next) {
+  try {
+    const users = await User.findBy({ username: req.body.username })
+    if (users.length) {
+      next()
+    } else { res.status(401).json({ message: 'Invalid credentials' }) }
+  } catch (err) {
+    next(err)
+  }
+  }
+
 
 /*
   If password is missing from req.body, or if it's 3 chars or shorter
@@ -44,13 +61,13 @@ function checkUsernameExists(req, res, next) {
   }
 */
 function checkPasswordLength(req, res, next) {
-  next()
-}
+    next()
+  }
 
-// Don't forget to add these to the `exports` object so they can be required in other modules
-module.exports = {
-  restricted,
-  checkUsernameFree,
-  checkUsernameExists,
-  checkPasswordLength,
-}
+  // Don't forget to add these to the `exports` object so they can be required in other modules
+  module.exports = {
+    restricted,
+    checkUsernameFree,
+    checkUsernameExists,
+    checkPasswordLength,
+  }
